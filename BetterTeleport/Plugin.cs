@@ -1,9 +1,11 @@
 ﻿using BetterTeleport.Windows;
+using Dalamud.Game.Addon.Events;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.UI;
 
 namespace BetterTeleport;
 
@@ -11,7 +13,8 @@ namespace BetterTeleport;
 // ReSharper disable once UnusedType.Global
 public sealed class Plugin : IDalamudPlugin
 {
-    private const string CommandName = "/btp";
+    private const string ShortCommandName = "/btp";
+    private const string FullCommandName = "/betterteleport";
 
     private readonly MainWindow mainWindow;
 
@@ -19,14 +22,17 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
-        mainWindow = new MainWindow();
+        mainWindow = new MainWindow(AetheryteList);
 
         windowSystem.AddWindow(mainWindow);
 
-        CommandManager.AddHandler(CommandName, new CommandInfo((_, _) => ToggleMainUi())
+        var mainCommandInfo = new CommandInfo((_, _) => ToggleMainUi())
         {
             HelpMessage = "Open the better teleport menu"
-        });
+        };
+        
+        CommandManager.AddHandler(ShortCommandName, mainCommandInfo);
+        CommandManager.AddHandler(FullCommandName, mainCommandInfo);
 
         PluginInterface.UiBuilder.Draw += DrawUi;
         PluginInterface.UiBuilder.OpenMainUi += ToggleMainUi;
@@ -37,6 +43,9 @@ public sealed class Plugin : IDalamudPlugin
 
     [PluginService]
     private static ICommandManager CommandManager { get; set; } = null!;
+    
+    [PluginService]
+    private static IAetheryteList AetheryteList { get; set; } = null!;
 
     public void Dispose()
     {
@@ -46,7 +55,7 @@ public sealed class Plugin : IDalamudPlugin
         windowSystem.RemoveAllWindows();
 
         mainWindow.Dispose();
-        CommandManager.RemoveHandler(CommandName);
+        CommandManager.RemoveHandler(ShortCommandName);
     }
 
     private void DrawUi()
