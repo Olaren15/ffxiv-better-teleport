@@ -1,0 +1,11 @@
+{
+  "Author": "Olaren",
+  "Name": "Better Teleport",
+  "Punchline": "A better teleport menu",
+  "Description": "Tired of scrolling through the always-expanding list of teleport locations? Me too. Here's a better teleport menu",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "teleport",
+    "utility"
+  ]
+}
