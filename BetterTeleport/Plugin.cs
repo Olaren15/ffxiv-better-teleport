@@ -54,7 +54,6 @@ public sealed class Plugin : IDalamudPlugin
 
         windowSystem.RemoveAllWindows();
 
-        mainWindow.Dispose();
         CommandManager.RemoveHandler(ShortCommandName);
     }
 
