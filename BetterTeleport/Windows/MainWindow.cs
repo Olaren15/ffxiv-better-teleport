@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Game.ClientState.Aetherytes;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
@@ -10,6 +11,9 @@ namespace BetterTeleport.Windows;
 
 public sealed class MainWindow : Window
 {
+    private const string StarIcon = "\uF005";
+    private static readonly Vector4 s_goldColor = new(0.945f, 0.718f, 0.357f, 1.0f);
+    private static readonly Vector4 s_silverColor = new(0.8f, 0.8f, 0.8f, 1.0f);
     private readonly IAetheryteList _aetheryteList;
 
     public MainWindow(IAetheryteList aetheryteList) : base("Better Teleport###BetterTeleportMainWindow")
@@ -44,19 +48,15 @@ public sealed class MainWindow : Window
             ImGui.TableSetupColumn("Fee", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableHeadersRow();
 
-            ImGui.PushID("Resiential Areas");
-            ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-            ImGui.TableNextColumn();
-            ImGui.TextUnformatted("Resiential Areas");
             string? lastRegionName = null;
 
-            for (int i = 0; i < _aetheryteList.Count; i++)
+            foreach (IAetheryteEntry aetheryte in _aetheryteList)
             {
-                IAetheryteEntry aetheryte = _aetheryteList[i]!;
-
-                string currentRegionName =
-                    aetheryte.AetheryteData.Value.Territory.Value.PlaceNameRegion.Value.Name.ExtractText();
-                if (lastRegionName != currentRegionName && i != 0)
+                string currentRegionName = aetheryte.IsApartment || aetheryte.IsSharedHouse || aetheryte.Plot != 0 ||
+                                           aetheryte.Ward != 0 || aetheryte.SubIndex != 0
+                    ? "Residential Areas"
+                    : aetheryte.AetheryteData.Value.Territory.Value.PlaceNameRegion.Value.Name.ExtractText();
+                if (lastRegionName != currentRegionName)
                 {
                     ImGui.PushID(currentRegionName);
                     ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
@@ -70,8 +70,32 @@ public sealed class MainWindow : Window
                 ImGui.TableNextRow();
 
                 ImGui.TableNextColumn();
+                if (aetheryte.IsFavourite)
+                {
+                    using (ImRaii.PushFont(UiBuilder.IconFont))
+                    {
+                        ImGui.TextColored(s_silverColor, StarIcon);
+                    }
+                }
+                else if (aetheryte.GilCost == 0) // Free destination
+                {
+                    using (ImRaii.PushFont(UiBuilder.IconFont))
+                    {
+                        ImGui.TextColored(s_goldColor, StarIcon);
+                    }
+                }
+                else
+                {
+                    using (ImRaii.PushFont(UiBuilder.MonoFont))
+                    {
+                        ImGui.TextUnformatted("  ");
+                    }
+                }
+
+                ImGui.SameLine();
+
                 if (ImGui.Selectable(
-                        $"    {aetheryte.AetheryteData.Value.Territory.Value.PlaceName.Value.Name.ExtractText()}",
+                        aetheryte.AetheryteData.Value.Territory.Value.PlaceName.Value.Name.ExtractText(),
                         false,
                         ImGuiSelectableFlags.SpanAllColumns))
                 {
